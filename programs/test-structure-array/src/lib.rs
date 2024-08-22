@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 // use std::str::FromStr;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
-declare_id!("FZhV3Aw5FFit8ro3QtDJaNJDoPYDeWybqnV7GkSLLqFn");
+declare_id!("7kRuvbXevUr8yPme3LxFMMq3maMe1mF3Mp36gwXoajnZ");
 
 #[program]
 pub mod test_structure_array {
@@ -119,7 +119,7 @@ pub struct UserIdo<'info> {
      #[account(mut)] 
     pub signer: Signer<'info>, 
      /// CHECK: This account is the transaction initiator and is used only to identify the sender.
-    pub user: AccountInfo<'info>,
+    // pub user: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     token_program: Program<'info, Token>, // 代币程序
 
@@ -164,7 +164,7 @@ pub struct UserIdo<'info> {
     #[account(mut)]   // 发送方的代币账户
     sender_token_account: Account<'info, TokenAccount>,
 
-    mint_of_token_being_sent: Account<'info, Mint>,
+    mint_of_token_being_sent: Account<'info, Mint>
 
 
 }

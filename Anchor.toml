@@ -5,10 +5,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-test_structure_array = "FZhV3Aw5FFit8ro3QtDJaNJDoPYDeWybqnV7GkSLLqFn"
+test_structure_array = "7kRuvbXevUr8yPme3LxFMMq3maMe1mF3Mp36gwXoajnZ"
 
 [programs.devnet]
-test_structure_array = "FZhV3Aw5FFit8ro3QtDJaNJDoPYDeWybqnV7GkSLLqFn"
+test_structure_array = "7kRuvbXevUr8yPme3LxFMMq3maMe1mF3Mp36gwXoajnZ"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,7 +16,8 @@ url = "https://api.apr.dev"
 [provider]
 #cluster = "Devnet"
 #cluster = "https://devnet.helius-rpc.com/?api-key=ad4acf69-6c69-4edf-bccc-28397c4956e9"
-cluster = "Localnet"
+cluster = "https://rpc.ankr.com/solana_devnet/481cfd45dfcdeb78376bf1f445c5c7730f0863f320f4317507deca979078be78"
+#cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
