@@ -50,28 +50,31 @@ describe("test-structure-array", () => {
 
   const userInfoPDA = anchor.web3.PublicKey.findProgramAddressSync([anchor.utils.bytes.utf8.encode("user_info_vec")], program.programId)[0]
 
-  //
+  // const devConnection = new Connection('https://devnet.helius-rpc.com/?api-key=ad4acf69-6c69-4edf-bccc-28397c4956e9')
+  const devConnection = new Connection('https://devnet-rpc.shyft.to?api_key=8VafiPaClmnwic-h')
 
 
-  // let initAccounts = {
-  //   userinfo: userInfoPDA,
-  //   // user: myAccount.publicKey,
-  //   tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
-  //   vaultTokenAccount: tokenVault,
-  //   senderTokenAccount: tokenAccount.address, // 发送token的账户
-  //   mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
-  //   signer: mintAuthority.publicKey,
-  // }
 
-  it("Is initialized!", async () => {
+  // const devConnection = new Connection('http://localhost:8899')
+  const decimals = 9;
+  const mintDecimals = Math.pow(10, decimals);
+  const mintAuthority = myAccount;
+  const metaplex = new Metaplex(devConnection).use(
+    keypairIdentity(mintAuthority)
+  );
+  // devnet 可以正常创建，报错信息中有mintaccount地址
+  // localnet 无法创建，报错：程序地址无法找到：Transaction simulation failed: Attempt to load a program that does not exist.
 
-    const lib_PROGRAM_ID = new PublicKey("7kRuvbXevUr8yPme3LxFMMq3maMe1mF3Mp36gwXoajnZ");
+  // 3PVqE8KLPkWUL5QALgwrfQ3ixdsUi5P6DWfQVcGDpoNpaLvupjZFSYbQFzNTSkfAEzyAt3spBDWQUP8AmvUb9rje
+  it.skip("Is initialized!", async () => {
+
+    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_account_owner_pda")], // seeds 为
       lib_PROGRAM_ID
     );
-    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
+    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户 GD5SMLSBW57xHDD55LhCQb3pgFJoDEkxevPT933pcD17
 
     const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
 
@@ -79,7 +82,7 @@ describe("test-structure-array", () => {
       [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
-    console.log("VaultAccount: " + tokenVault);
+    console.log("VaultAccount: " + tokenVault); // GMx4DbzMQEpGovKUiqHVtivhjQmaR1YEP8doa9Dx9kPx
 
     // 获取发送者的 token account 地址
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -89,41 +92,46 @@ describe("test-structure-array", () => {
       mintAuthority.publicKey  //获取哪个账户的tokenAccout
     );
 
-    console.log("tokenAccount: " + tokenAccount);
+    console.log("tokenAccount: ", tokenAccount); // 664Zx81DH3HqB3X74SPuHxmvasjYnFFVKbkpFf2T5CZ3
 
+    console.log("userInfoPDA:", userInfoPDA)
+    console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
     let initAccounts = {
-      userinfo: userInfoPDA,
-      // user: myAccount.publicKey,
       tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
       vaultTokenAccount: tokenVault, //接收代币的地址
       senderTokenAccount: tokenAccount.address, // 发送token的账户
       mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
+
       signer: mintAuthority.publicKey,
     }
 
+    // Add your test here.
+    // const tx = await program.methods.initialize().rpc();
+    const tx = await program.methods.initialize().accounts(initAccounts).signers([mintAuthority]).rpc();
+    console.log("Your transaction signature", tx);
 
 
+    // let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
+    // console.log("config:", cfg)
+  });
 
+  // wtCc4KmQoG5nk7gfw7i5nSGurFHGZSF4qVGmGprYGo3JXGp7sKZajqaNSFp2LjpnfJUXnkmZQjohfTVTgBzdZFg
+  it("InitConfig!", async () => {
+    console.log("userInfoPDA:", userInfoPDA)
+    console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
+    let initAccounts = {
+      userinfo: userInfoPDA,
+      signer: mintAuthority.publicKey
+    }
 
     // Add your test here.
     // const tx = await program.methods.initialize().rpc();
-    const tx = await program.methods.initialize().accounts(initAccounts).signers([myAccount]).rpc();
+    const tx = await program.methods.initConfig().accounts(initAccounts).signers([mintAuthority]).rpc();
     console.log("Your transaction signature", tx);
 
-    let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
-    console.log("config:", cfg)
+
   });
 
-  // const devConnection = new Connection('https://devnet.helius-rpc.com/?api-key=ad4acf69-6c69-4edf-bccc-28397c4956e9')
-  const devConnection = new Connection('https://rpc.ankr.com/solana_devnet/481cfd45dfcdeb78376bf1f445c5c7730f0863f320f4317507deca979078be78')
-  // const devConnection = new Connection('http://localhost:8899')
-  const decimals = 9;
-  const mintAuthority = myAccount;
-  const metaplex = new Metaplex(devConnection).use(
-    keypairIdentity(mintAuthority)
-  );
-  // devnet 可以正常创建，报错信息中有mintaccount地址
-  // localnet 无法创建，报错：程序地址无法找到：Transaction simulation failed: Attempt to load a program that does not exist.
   // USDT mintaccout:7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ
   // ENT mintaccout:6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR
   it.skip("create mint accout", async () => {
@@ -180,7 +188,7 @@ describe("test-structure-array", () => {
     // const mint_PROGRAM_ID = new PublicKey("6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR");
 
 
-    const mintDecimals = Math.pow(10, decimals);
+
     // const tokenStandard = TokenStandard.Fungible;
     let mintResult = await metaplex.nfts().mint({
       nftOrSft: { address: mint_PROGRAM_ID, tokenStandard: TokenStandard.Fungible },
@@ -194,8 +202,8 @@ describe("test-structure-array", () => {
 
 
   // 转账给合约
-  it.skip("user_ido", async () => {
-    const lib_PROGRAM_ID = new PublicKey("7kRuvbXevUr8yPme3LxFMMq3maMe1mF3Mp36gwXoajnZ");
+  it("user_ido", async () => {
+    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_account_owner_pda")], // seeds 为
@@ -232,7 +240,7 @@ describe("test-structure-array", () => {
     }
 
     // Add your test here.
-    const tx = await program.methods.userIdo(new anchor.BN(8)).accounts(initAccounts).signers([mintAuthority]).rpc();
+    const tx = await program.methods.userIdo(new anchor.BN(1 * mintDecimals)).accounts(initAccounts).signers([mintAuthority]).rpc();
     console.log("Your transaction signature", tx);
 
     let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
@@ -241,24 +249,84 @@ describe("test-structure-array", () => {
 
   // 参与者权限问题,无法访问 UserInfoVec 集合
 
-  // // 参与者2
-  // it("user_ido2", async () => {
-  //   // Add your test here.
-  //   const tx = await program.methods.userIdo(new anchor.BN(10)).accounts(initAccounts).signers([myAccount, myAccount2]).rpc();
-  //   console.log("Your transaction signature", tx);
+  // 参与者2
+  it("user_ido2", async () => {
+    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
+    // // 生成pda账户-----------------------
+    let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_account_owner_pda")], // seeds 为
+      lib_PROGRAM_ID
+    );
+    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
 
-  //   let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
-  //   console.log("config:", cfg)
-  // })
+    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
 
-  // it("user_claim", async () => {
-  //   // Add your test here.
-  //   const tx = await program.methods.userClaim().accounts(initAccounts).signers([myAccount]).rpc();
-  //   console.log("Your transaction signature", tx);
+    let [tokenVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      lib_PROGRAM_ID // 关联程序的地址
+    );
+    console.log("VaultAccount: " + tokenVault);
 
-  //   let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
-  //   console.log("config:", cfg)
-  // });
+    // 获取发送者的 token account 地址
+    const tokenAccount = await getOrCreateAssociatedTokenAccount(
+      devConnection,
+      myAccount2, // 支付创建账户费用的账户的Keypair 
+      mint_PROGRAM_ID,
+      myAccount2.publicKey  //获取哪个账户的tokenAccout
+    );
+
+    console.log("tokenAccount: " + tokenAccount);
+
+    let initAccounts = {
+      userinfo: userInfoPDA,
+      // user: myAccount.publicKey,
+      tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
+      vaultTokenAccount: tokenVault, //接收代币的地址
+      senderTokenAccount: tokenAccount.address, // 发送token的账户
+      mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
+      signer: myAccount2.publicKey,
+    }
+
+    // Add your test here.
+    const tx = await program.methods.userIdo(new anchor.BN(2 * mintDecimals)).accounts(initAccounts).signers([myAccount2]).rpc();
+    console.log("Your transaction signature", tx);
+
+    let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
+    console.log("config:", cfg)
+  })
+
+  it.skip("user_claim", async () => {
+    let initAccounts = {
+      userinfo: userInfoPDA,
+      signer: myAccount2.publicKey
+    }
+    let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
+
+    console.log("config:", cfg)
+    // Add your test here.
+    const tx = await program.methods.userClaim().accounts(initAccounts).signers([myAccount2]).rpc();
+    console.log("Your transaction signature", tx);
 
 
+    console.log("config:", cfg)
+  });
+
+
+  it("select info", async () => {
+    console.log("userInfoPDA:", userInfoPDA)
+    console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
+    let initAccounts = {
+      userinfo: userInfoPDA,
+      signer: mintAuthority.publicKey
+    }
+
+    // Add your test here.
+    // const tx = await program.methods.initialize().rpc();
+    const tx = await program.methods.selectInfo().accounts(initAccounts).signers([mintAuthority]).rpc();
+    console.log("Your transaction signature", tx);
+  });
 });
+
+
+
+// 获得userinfo，pda地址，在新合约中调用。账户1和账户2

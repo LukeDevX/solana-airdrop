@@ -2,20 +2,26 @@ use anchor_lang::prelude::*;
 // use std::str::FromStr;
 use anchor_spl::token::{Mint, Token, TokenAccount, Transfer};
 
-declare_id!("7kRuvbXevUr8yPme3LxFMMq3maMe1mF3Mp36gwXoajnZ");
+declare_id!("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
 
 #[program]
 pub mod test_structure_array {
     use super::*;
 
     pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
-        // msg!("_ctx.bumps.userinfo {:?}", _ctx.bumps.userinfo);
+        
+        msg!("token_account_owner_pda: {:?}", _ctx.accounts.token_account_owner_pda.key());
+        msg!("vault_token_account: {:?}", _ctx.accounts.vault_token_account.key());
+        msg!("mint_of_token_being_sent: {:?}", _ctx.accounts.mint_of_token_being_sent.key());
+        Ok(())
+    }
 
+    pub fn InitConfig(_ctx: Context<InitConfig>) -> Result<()> {
+
+        msg!("Greetings from: {:?}", _ctx.program_id);
         _ctx.accounts.userinfo.bump = _ctx.bumps.userinfo;
-        // msg!("Greetings from: {:?}", _ctx.program_id);
-        // msg!("userinfo PDA: {:?}", _ctx.accounts.userinfo.key());
-        // msg!("userinfo Bump: {:?}", _ctx.accounts.userinfo.bump);
-
+        msg!("userinfo PDA: {:?}", _ctx.accounts.userinfo.key());
+        msg!("userinfo Bump: {:?}", _ctx.accounts.userinfo.bump);
 
         // _ctx.accounts.userinfo.user = vec![Pubkey::from_str("").unwrap(); 10];
         // _ctx.accounts.userinfo.amount = vec![0; 10];
@@ -24,9 +30,10 @@ pub mod test_structure_array {
     }
 
 
-    pub fn user_ido(_ctx: Context<UserIdo>,  _amount: u64) -> Result<()> {
-        // require!(_ctx.accounts.config.is_ido == true, ErrorCode::CannotIdo); 
 
+    pub fn user_ido(_ctx: Context<UserIdo>,  _amount: u64) -> Result<()> {
+       
+        // require!(_ctx.accounts.config.is_ido == true, ErrorCode::CannotIdo); 
 
         // 以下是我们要发送给 Token 程序的实际指令。
         let transfer_instruction = Transfer { // 创建转账指令
@@ -42,16 +49,29 @@ pub mod test_structure_array {
 
         anchor_spl::token::transfer(cpi_ctx, _amount)?; // 调用token程序的转账函数 // 无返回值
 
+        if let Some(pos) = _ctx.accounts.userinfo.user.iter().position(|&x| x == _ctx.accounts.signer.key()) { 
+            println!("Found 30 at index: {}", pos); // 输出: Found 30 at index: 2
+            msg!("_ctx.accounts.signer 的位置{}",pos);
 
+            if let Some(value) =  _ctx.accounts.userinfo.amount.get_mut(pos){
+                *value +=  _amount;
+            }
+            msg!("add{:?}",_ctx.accounts.userinfo.amount);
+        }else{
+            _ctx.accounts.userinfo.user.push( _ctx.accounts.signer.key());
+            _ctx.accounts.userinfo.amount.push(_amount);
+            msg!("amount {:?}",_amount)
+        }
 
-        _ctx.accounts.userinfo.user.push( _ctx.accounts.signer.key());
-        _ctx.accounts.userinfo.amount.push(_amount);
+        msg!("userinfo PDA: {:?}", _ctx.accounts.userinfo.key());
+        msg!("userinfo Bump: {:?}", _ctx.accounts.userinfo.bump);
 
-
+       
         msg!("插入当前_amount: {:?}",_amount);
         msg!("user{:?}",_ctx.accounts.userinfo.user);
         msg!("amount{:?}",_ctx.accounts.userinfo.amount);
-
+        msg!("user len {:?}", _ctx.accounts.userinfo.user.len());
+        msg!("amount len {:?}", _ctx.accounts.userinfo.amount.len());
         
         Ok(())
     }
@@ -59,7 +79,7 @@ pub mod test_structure_array {
     pub fn user_claim(_ctx: Context<UserClaim>) -> Result<()> {
         // require!(ctx.accounts.config.is_claim == true, ErrorCode::CannotClaim); 
         
-        if let Some(pos) = _ctx.accounts.userinfo.user.iter().position(|&x| x == _ctx.accounts.user.key()) { 
+        if let Some(pos) = _ctx.accounts.userinfo.user.iter().position(|&x| x == _ctx.accounts.signer.key()) { 
             println!("Found 30 at index: {}", pos); // 输出: Found 30 at index: 2
             msg!("_ctx.accounts.signer 的位置{}",pos);
 
@@ -70,25 +90,22 @@ pub mod test_structure_array {
         }
         Ok(())
     }
-}
 
+
+     pub fn select_info(_ctx: Context<SelectInfo>) -> Result<()> {
+        msg!("userinfo PDA: {:?}", _ctx.accounts.userinfo.key());
+        msg!("userinfo Bump: {:?}", _ctx.accounts.userinfo.bump);
+        msg!("user len {:?}", _ctx.accounts.userinfo.user.len());
+        msg!("amount len {:?}", _ctx.accounts.userinfo.amount.len());
+        msg!("user{:?}",_ctx.accounts.userinfo.user);
+        msg!("amount{:?}",_ctx.accounts.userinfo.amount);
+        
+        Ok(())
+    }
+
+}
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    #[account(
-        init_if_needed,
-        space = 8 + UserInfoVec::INIT_SPACE,
-        payer = signer,
-        seeds = [b"user_info_vec"],
-        bump,
-    )]
-    pub userinfo: Account<'info, UserInfoVec>,
-
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-    token_program: Program<'info, Token>, // 代币程序
-
-
     // Derived PDAs // 衍生 PDA
     #[account(  // 初始化或需要时创建PDA账户
         init_if_needed,
@@ -108,33 +125,43 @@ pub struct Initialize<'info> {
         token::authority=token_account_owner_pda,
         bump
     )]
-    
-    vault_token_account: Account<'info, TokenAccount>,
-    mint_of_token_being_sent: Account<'info, Mint>,
+    vault_token_account: Box<Account<'info, TokenAccount>>,
+    mint_of_token_being_sent: Box<Account<'info, Mint>>,
+
+    #[account(mut)]
+    signer: Signer<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>, // 代币程序
+    rent: Sysvar<'info, Rent> // 租金系统变量
+}
+
+
+#[derive(Accounts)]
+pub struct InitConfig<'info> {
+    #[account(mut)]
+    signer: Signer<'info>,
+    system_program: Program<'info, System>,
+
+    #[account(
+        init_if_needed,
+        space = 8 + UserInfoVec::INIT_SPACE,
+        payer = signer,
+        seeds = [b"user_info_vec"],
+        bump
+    )]
+    pub userinfo: Account<'info, UserInfoVec>
 
 }
 
 #[derive(Accounts)]
 pub struct UserIdo<'info> {
-     #[account(mut)] 
-    pub signer: Signer<'info>, 
-     /// CHECK: This account is the transaction initiator and is used only to identify the sender.
-    // pub user: AccountInfo<'info>,
-    pub system_program: Program<'info, System>,
-    token_program: Program<'info, Token>, // 代币程序
-
-    // #[account(
-    //     init_if_needed,
-    //     space = 8 + UserInfoVec::INIT_SPACE,
-    //     payer = signer,
-    //     seeds = [b"user_info_vec"],
-    //     bump,
-    // )]
+    
     #[account(
+        mut,
         seeds = [b"user_info_vec"],
         bump = userinfo.bump,
     )]
-    pub userinfo: Account<'info, UserInfoVec>,
+    userinfo: Account<'info, UserInfoVec>,
     // #[account(
     //     seeds = [
     //         b"ido_config", 
@@ -159,23 +186,27 @@ pub struct UserIdo<'info> {
         token::mint=mint_of_token_being_sent,
         token::authority=token_account_owner_pda,
     )]
-    vault_token_account: Account<'info, TokenAccount>,
+    vault_token_account: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]   // 发送方的代币账户
-    sender_token_account: Account<'info, TokenAccount>,
+    sender_token_account: Box<Account<'info, TokenAccount>>,
+    mint_of_token_being_sent: Box<Account<'info, Mint>>,
 
-    mint_of_token_being_sent: Account<'info, Mint>
 
-
+    #[account(mut)] 
+    signer: Signer<'info>, 
+     /// CHECK: This account is the transaction initiator and is used only to identify the sender.
+    // pub user: AccountInfo<'info>,
+    system_program: Program<'info, System>,
+    token_program: Program<'info, Token>, // 代币程序
+    rent: Sysvar<'info, Rent>, // 租金系统变量
 }
 
 // 用户 领币
 #[derive(Accounts)]
 pub struct UserClaim<'info> {
-    // #[account(mut)] 
-    // pub signer: Signer<'info>, 
-     /// CHECK: This account is the transaction initiator and is used only to identify the sender.
-    pub user: AccountInfo<'info>,
+    #[account(mut)] 
+    pub signer: Signer<'info>, 
     pub system_program: Program<'info, System>,
 
     // #[account(
@@ -187,17 +218,35 @@ pub struct UserClaim<'info> {
     // pub config: Account<'info, ConfigInfo>,
     
     #[account(
+        mut,
         seeds = [b"user_info_vec"],
         bump = userinfo.bump,
     )]
     pub userinfo: Account<'info, UserInfoVec>,
 
-
-
-
-
 }
 
+#[derive(Accounts)]
+pub struct SelectInfo<'info> {
+    
+    #[account(
+        seeds = [b"user_info_vec"],
+        bump = userinfo.bump,
+    )]
+    userinfo: Account<'info, UserInfoVec>,
+
+        // #[account(
+    //     seeds = [
+    //         b"ido_config", 
+    //     ],
+    //     bump = config.bump,
+    // )]
+    // pub config: Account<'info, ConfigInfo>,
+
+    #[account(mut)] 
+    signer: Signer<'info>, 
+    system_program: Program<'info, System>
+}
 
 
 #[account] 
@@ -210,8 +259,16 @@ pub struct UserInfoVec {
     pub user: Vec<Pubkey>,  // 存储键
     #[max_len(100)] 
     pub amount: Vec<u64>,   // 存储值
+    // pub user: Vec<Pubkey>,  // 存储键
+    // pub amount: Vec<u64>,   // 存储值
+    // pub len: u64,
     pub bump: u8, // 0-255
 }
+
+// 修改为添加成数组
+// 在新项目中测试添加vec
+
+
 
 
 
