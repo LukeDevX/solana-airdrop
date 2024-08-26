@@ -5,10 +5,10 @@ resolution = true  #构建项目时会更严格地处理依赖项的版本解析
 skip-lint = false  #是否跳过代码检查
 
 [programs.localnet]
-test_structure_array = "Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8"
+test_structure_array = "2yj1eyrGfhaveP39nHYpgbo5TK2jaP3uoBPtdyQgqdpW"
 
 [programs.devnet]
-test_structure_array = "Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8"
+test_structure_array = "2yj1eyrGfhaveP39nHYpgbo5TK2jaP3uoBPtdyQgqdpW"
 
 [registry]
 url = "https://api.apr.dev"

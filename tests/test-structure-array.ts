@@ -49,10 +49,18 @@ describe("test-structure-array", () => {
   const program = anchor.workspace.TestStructureArray as Program<TestStructureArray>;
 
   const userInfoPDA = anchor.web3.PublicKey.findProgramAddressSync([anchor.utils.bytes.utf8.encode("user_info_vec")], program.programId)[0]
+  const cfgPDA = anchor.web3.PublicKey.findProgramAddressSync([anchor.utils.bytes.utf8.encode("ido_config")], program.programId)[0]
+
+  const lib_PROGRAM_ID = new PublicKey("2yj1eyrGfhaveP39nHYpgbo5TK2jaP3uoBPtdyQgqdpW");
+  const mint_usdt_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
+  const mint_ent_ID = new PublicKey("6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR");
+
+  // tokenAccountOwnerPda CmFHEBTdEXkCUGXdQfJqgdZSfMKRM9t45L9kJFnF4Zez
+  // usdt VaultAccount: 7gLs8yJgNFNoTjNLCP2oySjpN7Xj3eVLti2UEqgWi3ie
+  // ent VaultAccount: 7gLs8yJgNFNoTjNLCP2oySjpN7Xj3eVLti2UEqgWi3ie
 
   // const devConnection = new Connection('https://devnet.helius-rpc.com/?api-key=ad4acf69-6c69-4edf-bccc-28397c4956e9')
   const devConnection = new Connection('https://devnet-rpc.shyft.to?api_key=8VafiPaClmnwic-h')
-
 
 
   // const devConnection = new Connection('http://localhost:8899')
@@ -65,34 +73,29 @@ describe("test-structure-array", () => {
   // devnet 可以正常创建，报错信息中有mintaccount地址
   // localnet 无法创建，报错：程序地址无法找到：Transaction simulation failed: Attempt to load a program that does not exist.
 
-  // 3PVqE8KLPkWUL5QALgwrfQ3ixdsUi5P6DWfQVcGDpoNpaLvupjZFSYbQFzNTSkfAEzyAt3spBDWQUP8AmvUb9rje
-  it.skip("Is initialized!", async () => {
-
-    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
-    // // 生成pda账户-----------------------
-    let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_account_owner_pda")], // seeds 为
-      lib_PROGRAM_ID
-    );
-    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户 GD5SMLSBW57xHDD55LhCQb3pgFJoDEkxevPT933pcD17
-
-    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
+  // // 生成pda账户-----------------------
+  let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("token_account_owner_pda")], // seeds 为
+    lib_PROGRAM_ID
+  );
+  console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户 
+  it("Is initialized!", async () => {
 
     let [tokenVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      [Buffer.from("token_vault"), mint_usdt_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
-    console.log("VaultAccount: " + tokenVault); // GMx4DbzMQEpGovKUiqHVtivhjQmaR1YEP8doa9Dx9kPx
+    console.log("VaultAccount: " + tokenVault);
 
     // 获取发送者的 token account 地址
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
       devConnection,
       mintAuthority, // 支付创建账户费用的账户的Keypair 
-      mint_PROGRAM_ID,
+      mint_usdt_ID,
       mintAuthority.publicKey  //获取哪个账户的tokenAccout
     );
 
-    console.log("tokenAccount: ", tokenAccount); // 664Zx81DH3HqB3X74SPuHxmvasjYnFFVKbkpFf2T5CZ3
+    console.log("tokenAccount: ", tokenAccount);
 
     console.log("userInfoPDA:", userInfoPDA)
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
@@ -100,8 +103,7 @@ describe("test-structure-array", () => {
       tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
       vaultTokenAccount: tokenVault, //接收代币的地址
       senderTokenAccount: tokenAccount.address, // 发送token的账户
-      mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
-
+      mintOfTokenBeingSent: mint_usdt_ID, // mint-token地址
       signer: mintAuthority.publicKey,
     }
 
@@ -111,15 +113,48 @@ describe("test-structure-array", () => {
     console.log("Your transaction signature", tx);
 
 
-    // let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
-    // console.log("config:", cfg)
+    let [tokenVaultent] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), mint_ent_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      lib_PROGRAM_ID // 关联程序的地址
+    );
+    console.log("tokenVaultent: " + tokenVaultent);
+
+    const tokenAccountent = await getOrCreateAssociatedTokenAccount(
+      devConnection,
+      mintAuthority, // 支付创建账户费用的账户的Keypair 
+      mint_ent_ID,
+      mintAuthority.publicKey  //获取哪个账户的tokenAccout
+    );
+
+    console.log("tokenAccountent: ", tokenAccountent);
+    let initAccounts2 = {
+      tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
+      vaultTokenAccount: tokenVaultent, //接收代币的地址
+      senderTokenAccount: tokenAccountent.address, // 发送token的账户
+      mintOfTokenBeingSent: mint_ent_ID, // mint-token地址
+      signer: mintAuthority.publicKey,
+    }
+    const tx2 = await program.methods.initialize().accounts(initAccounts2).signers([mintAuthority]).rpc();
+
+
+
+    console.log("userInfoPDA:", userInfoPDA)
+    console.log("cfgPDA:", cfgPDA)
+
+    // let cfguser = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
+    // console.log("userInfoPDA:", cfguser)
+    // let cfg = await program.account.userInfoVec.fetch(cfgPDA); // 获取config 的 pda信息
+    // console.log("configPDA:", cfg)
+
   });
 
   // wtCc4KmQoG5nk7gfw7i5nSGurFHGZSF4qVGmGprYGo3JXGp7sKZajqaNSFp2LjpnfJUXnkmZQjohfTVTgBzdZFg
   it.skip("InitConfig!", async () => {
     console.log("userInfoPDA:", userInfoPDA)
+    console.log("cfgPDA:", cfgPDA)
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
     let initAccounts = {
+      config: cfgPDA,
       userinfo: userInfoPDA,
       signer: mintAuthority.publicKey
     }
@@ -129,6 +164,29 @@ describe("test-structure-array", () => {
     const tx = await program.methods.initConfig().accounts(initAccounts).signers([mintAuthority]).rpc();
     console.log("Your transaction signature", tx);
 
+  });
+
+
+  it.skip("update config", async () => {
+    console.log("update config")
+    let configaccount = myAccount
+    // const tx = await program.methods.updateConfig(true, true).accounts({ // 设置是否可以 is_ido 和 is_claim
+    //   systemProgram: anchor.web3.SystemProgram.programId, // 构建传入指令
+    //   admin: myAccount.publicKey,
+    //   config: cfgPDA, // config地址
+    // }).rpc();
+    const updateConfig = {  // 构建传入更新指令
+      // systemProgram: anchor.web3.SystemProgram.programId,
+      signer: configaccount.publicKey,
+      config: cfgPDA, // config地址
+    };
+    const tx = await program.methods.updateConfig(false, false).accounts(updateConfig).signers([configaccount]).rpc(); // 设置是否可以 is_ido 和 is_claim
+    // bump 255
+    // seed：ido_config
+
+    console.log("Your transaction signature", tx);
+    let cfg = await program.account.configInfo.fetch(cfgPDA); // 获取config 的 pda信息
+    console.log("config:", cfg)
 
   });
 
@@ -180,19 +238,17 @@ describe("test-structure-array", () => {
   });
 
 
+
   // mint 代币
   it.skip("mint token", async () => {
     // USDT mintaccout:7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ
     // ENT mintaccout:6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR
-    const mint_PROGRAM_ID = new PublicKey("6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR");
-    // const mint_PROGRAM_ID = new PublicKey("6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR");
 
-    // const tokenStandard = TokenStandard.Fungible;
     let mintResult = await metaplex.nfts().mint({
-      nftOrSft: { address: mint_PROGRAM_ID, tokenStandard: TokenStandard.Fungible },
+      nftOrSft: { address: mint_ent_ID, tokenStandard: TokenStandard.Fungible },
       authority: mintAuthority,
-      toOwner: myAccount.publicKey,
-      amount: token(1000 * mintDecimals),
+      toOwner: tokenAccountOwnerPda,
+      amount: token(18888 * mintDecimals),
     });
     console.log("Mint to result: " + mintResult.response.signature);
 
@@ -201,7 +257,7 @@ describe("test-structure-array", () => {
 
   // 转账给合约
   it.skip("user_ido", async () => {
-    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
+
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_account_owner_pda")], // seeds 为
@@ -209,10 +265,8 @@ describe("test-structure-array", () => {
     );
     console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
 
-    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
-
     let [tokenVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      [Buffer.from("token_vault"), mint_usdt_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
     console.log("VaultAccount: " + tokenVault);
@@ -221,7 +275,7 @@ describe("test-structure-array", () => {
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
       devConnection,
       mintAuthority, // 支付创建账户费用的账户的Keypair 
-      mint_PROGRAM_ID,
+      mint_usdt_ID,
       mintAuthority.publicKey  //获取哪个账户的tokenAccout
     );
 
@@ -233,7 +287,7 @@ describe("test-structure-array", () => {
       tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
       vaultTokenAccount: tokenVault, //接收代币的地址
       senderTokenAccount: tokenAccount.address, // 发送token的账户
-      mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
+      mintOfTokenBeingSent: mint_usdt_ID, // mint-token地址
       signer: mintAuthority.publicKey,
     }
 
@@ -249,7 +303,6 @@ describe("test-structure-array", () => {
 
   // 参与者2
   it.skip("user_ido2", async () => {
-    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_account_owner_pda")], // seeds 为
@@ -257,10 +310,8 @@ describe("test-structure-array", () => {
     );
     console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
 
-    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
-
     let [tokenVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      [Buffer.from("token_vault"), mint_usdt_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
     console.log("VaultAccount: " + tokenVault);
@@ -269,7 +320,7 @@ describe("test-structure-array", () => {
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
       devConnection,
       myAccount2, // 支付创建账户费用的账户的Keypair 
-      mint_PROGRAM_ID,
+      mint_usdt_ID,
       myAccount2.publicKey  //获取哪个账户的tokenAccout
     );
 
@@ -281,7 +332,7 @@ describe("test-structure-array", () => {
       tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
       vaultTokenAccount: tokenVault, //接收代币的地址
       senderTokenAccount: tokenAccount.address, // 发送token的账户
-      mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
+      mintOfTokenBeingSent: mint_usdt_ID, // mint-token地址
       signer: myAccount2.publicKey,
     }
 
@@ -293,10 +344,8 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   })
 
-  it("user_claim", async () => {
+  it.skip("user_claim", async () => {
     let claimaccount = myAccount2;
-
-    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_account_owner_pda")], // seeds 为
@@ -304,10 +353,8 @@ describe("test-structure-array", () => {
     );
     console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
 
-    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
-
     let [tokenVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      [Buffer.from("token_vault"), mint_ent_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
     console.log("VaultAccount: " + tokenVault);
@@ -316,7 +363,7 @@ describe("test-structure-array", () => {
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
       devConnection,
       claimaccount, // 支付创建账户费用的账户的Keypair 
-      mint_PROGRAM_ID,
+      mint_ent_ID,
       claimaccount.publicKey  //获取哪个账户的tokenAccout
     );
 
@@ -328,7 +375,91 @@ describe("test-structure-array", () => {
       tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
       vaultTokenAccount: tokenVault, //接收代币的地址
       senderTokenAccount: tokenAccount.address, // 发送token的账户
-      mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
+      mintOfTokenBeingSent: mint_ent_ID, // mint-token地址
+      signer: claimaccount.publicKey,
+    }
+    let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
+
+    console.log("config:", cfg)
+    // Add your test here.
+    const tx = await program.methods.userClaim().accounts(initAccounts).signers([claimaccount]).rpc();
+    console.log("Your transaction signature", tx);
+
+    console.log("config:", cfg)
+  });
+
+  // 管理员转出usdt
+  it.skip("admin transfer_usdt", async () => {
+    let claimaccount = myAccount;
+    // // 生成pda账户-----------------------
+    let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_account_owner_pda")], // seeds 为
+      lib_PROGRAM_ID
+    );
+    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
+
+    let [tokenVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), mint_usdt_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      lib_PROGRAM_ID // 关联程序的地址
+    );
+    console.log("VaultAccount: " + tokenVault);
+
+    // 获取发送者的 token account 地址
+    const tokenAccount = await getOrCreateAssociatedTokenAccount(
+      devConnection,
+      claimaccount, // 支付创建账户费用的账户的Keypair 
+      mint_usdt_ID,
+      claimaccount.publicKey  //获取哪个账户的tokenAccout
+    );
+    console.log("tokenAccount: " + tokenAccount);
+    let initAccounts = {
+      tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
+      vaultTokenAccount: tokenVault, //接收代币的地址
+      senderTokenAccount: tokenAccount.address, // 发送token的账户
+      mintOfTokenBeingSent: mint_usdt_ID, // mint-token地址
+      signer: claimaccount.publicKey,
+    }
+    let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
+    console.log("config:", cfg)
+    // Add your test here.
+    const tx = await program.methods.transferUsdt(new anchor.BN(2 * mintDecimals)).accounts(initAccounts).signers([claimaccount]).rpc();
+    console.log("Your transaction signature", tx);
+    console.log("config:", cfg)
+  });
+
+  // 管理员转入ent
+  it.skip("admin transfer_ent", async () => {
+    let claimaccount = myAccount2;
+    // // 生成pda账户-----------------------
+    let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_account_owner_pda")], // seeds 为
+      lib_PROGRAM_ID
+    );
+    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
+
+    let [tokenVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), mint_ent_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      lib_PROGRAM_ID // 关联程序的地址
+    );
+    console.log("VaultAccount: " + tokenVault);
+
+    // 获取发送者的 token account 地址
+    const tokenAccount = await getOrCreateAssociatedTokenAccount(
+      devConnection,
+      claimaccount, // 支付创建账户费用的账户的Keypair 
+      mint_ent_ID,
+      claimaccount.publicKey  //获取哪个账户的tokenAccout
+    );
+
+    console.log("tokenAccount: " + tokenAccount);
+
+    let initAccounts = {
+      userinfo: userInfoPDA,
+      // user: myAccount.publicKey,
+      tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
+      vaultTokenAccount: tokenVault, //接收代币的地址
+      senderTokenAccount: tokenAccount.address, // 发送token的账户
+      mintOfTokenBeingSent: mint_ent_ID, // mint-token地址
       signer: claimaccount.publicKey,
     }
     let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
@@ -347,6 +478,7 @@ describe("test-structure-array", () => {
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
     let initAccounts = {
       userinfo: userInfoPDA,
+      config: cfgPDA,
       signer: mintAuthority.publicKey
     }
 
@@ -360,3 +492,14 @@ describe("test-structure-array", () => {
 
 
 // 获得userinfo，pda地址，在新合约中调用。账户1和账户2
+
+// 待测试
+// 1. 转出usdt,ent
+// 2. 判断config配置文件方法
+
+// ----已完成
+//1. phantom 转入 token 方法，可以直接给ata账户和solana账户转账，转账前合约地址必须存在
+
+
+// 待实现
+// 转入usdt,按比例添加到数组中;领取时转出ent
