@@ -116,7 +116,7 @@ describe("test-structure-array", () => {
   });
 
   // wtCc4KmQoG5nk7gfw7i5nSGurFHGZSF4qVGmGprYGo3JXGp7sKZajqaNSFp2LjpnfJUXnkmZQjohfTVTgBzdZFg
-  it("InitConfig!", async () => {
+  it.skip("InitConfig!", async () => {
     console.log("userInfoPDA:", userInfoPDA)
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
     let initAccounts = {
@@ -184,17 +184,15 @@ describe("test-structure-array", () => {
   it.skip("mint token", async () => {
     // USDT mintaccout:7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ
     // ENT mintaccout:6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR
-    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
+    const mint_PROGRAM_ID = new PublicKey("6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR");
     // const mint_PROGRAM_ID = new PublicKey("6vmMAZrdNje9bDRRNEjnnnjtUNTo8Z8bByyi4zpv4ehR");
-
-
 
     // const tokenStandard = TokenStandard.Fungible;
     let mintResult = await metaplex.nfts().mint({
       nftOrSft: { address: mint_PROGRAM_ID, tokenStandard: TokenStandard.Fungible },
       authority: mintAuthority,
-      toOwner: myAccount2.publicKey,
-      amount: token(112 * mintDecimals),
+      toOwner: myAccount.publicKey,
+      amount: token(1000 * mintDecimals),
     });
     console.log("Mint to result: " + mintResult.response.signature);
 
@@ -202,7 +200,7 @@ describe("test-structure-array", () => {
 
 
   // 转账给合约
-  it("user_ido", async () => {
+  it.skip("user_ido", async () => {
     const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -250,7 +248,7 @@ describe("test-structure-array", () => {
   // 参与者权限问题,无法访问 UserInfoVec 集合
 
   // 参与者2
-  it("user_ido2", async () => {
+  it.skip("user_ido2", async () => {
     const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -295,18 +293,50 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   })
 
-  it.skip("user_claim", async () => {
+  it("user_claim", async () => {
+    let claimaccount = myAccount2;
+
+    const lib_PROGRAM_ID = new PublicKey("Aw9VRHGgHeW2MsSJuxkS7nHxdzbQQnSErQP45RFysKW8");
+    // // 生成pda账户-----------------------
+    let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_account_owner_pda")], // seeds 为
+      lib_PROGRAM_ID
+    );
+    console.log("tokenAccountOwnerPda", tokenAccountOwnerPda.toString()); // program 关联的token account owner pda账户
+
+    const mint_PROGRAM_ID = new PublicKey("7QKkh5XozczWdw3gYATfn1mftUt8PqupumsEDiGKKaXJ");
+
+    let [tokenVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from("token_vault"), mint_PROGRAM_ID.toBuffer()], // seed："token_vaul",mint token账户地址
+      lib_PROGRAM_ID // 关联程序的地址
+    );
+    console.log("VaultAccount: " + tokenVault);
+
+    // 获取发送者的 token account 地址
+    const tokenAccount = await getOrCreateAssociatedTokenAccount(
+      devConnection,
+      claimaccount, // 支付创建账户费用的账户的Keypair 
+      mint_PROGRAM_ID,
+      claimaccount.publicKey  //获取哪个账户的tokenAccout
+    );
+
+    console.log("tokenAccount: " + tokenAccount);
+
     let initAccounts = {
       userinfo: userInfoPDA,
-      signer: myAccount2.publicKey
+      // user: myAccount.publicKey,
+      tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
+      vaultTokenAccount: tokenVault, //接收代币的地址
+      senderTokenAccount: tokenAccount.address, // 发送token的账户
+      mintOfTokenBeingSent: mint_PROGRAM_ID, // mint-token地址
+      signer: claimaccount.publicKey,
     }
     let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
 
     console.log("config:", cfg)
     // Add your test here.
-    const tx = await program.methods.userClaim().accounts(initAccounts).signers([myAccount2]).rpc();
+    const tx = await program.methods.userClaim().accounts(initAccounts).signers([claimaccount]).rpc();
     console.log("Your transaction signature", tx);
-
 
     console.log("config:", cfg)
   });
