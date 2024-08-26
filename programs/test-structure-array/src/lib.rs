@@ -84,15 +84,46 @@ pub mod test_structure_array {
             msg!("_ctx.accounts.signer 的位置{}",pos);
 
             if let Some(value) =  _ctx.accounts.userinfo.amount.get_mut(pos){
+                let _amount = *value;
                 *value = 0;
+                // Below is the actual instruction that we are going to send to the Token program. 以下是我们要发送给Token程序的实际指令
+                // 获取token-account账户
+                let token_account =  anchor_spl::associated_token::get_associated_token_address(&_ctx.accounts.signer.key(),&_ctx.accounts.mint_of_token_being_sent.key());
+                msg!("&_ctx.accounts.signer.key() {}",&_ctx.accounts.signer.key());
+                msg!("&_ctx.accounts.mint_of_token_being_sent.key() {}",&_ctx.accounts.mint_of_token_being_sent.key());
+                msg!("_amount {}",_amount);
+                msg!("token_account {}",token_account);
+                msg!("ctx.accounts.sender_token_account.to_account_info() {:?}",_ctx.accounts.sender_token_account.to_account_info());
+                msg!("ctx.accounts.sender_token_account{:?}",_ctx.accounts.sender_token_account);
+
+                require!(_ctx.accounts.sender_token_account.key() == token_account, ErrorCode::ErrorAccount);  // 判断，传递的ata账户与程序计算的ata账户是否相同
+
+                msg!("ctx.accounts.sender_token_account.key() {:?}",_ctx.accounts.sender_token_account.key());
+                // require!(_ctx.accounts.sender_token_account.key() == _ctx.accounts.signer.key(), ErrorCode::ErrorAccount); 
+              
+                let transfer_instruction = Transfer { // 创建转账指令
+                    from: _ctx.accounts.vault_token_account.to_account_info(),
+                    to: _ctx.accounts.sender_token_account.to_account_info(),
+                    authority: _ctx.accounts.token_account_owner_pda.to_account_info(), 
+                };
+
+                let bump = _ctx.bumps.token_account_owner_pda; // 获取bump种子
+                let seeds = &[b"token_account_owner_pda".as_ref(), &[bump]];
+                let signer = &[&seeds[..]];
+
+                let cpi_ctx = CpiContext::new_with_signer( // 创建带有签名的CPI上下文
+                    _ctx.accounts.token_program.to_account_info(),
+                    transfer_instruction,
+                    signer,
+                );
+                anchor_spl::token::transfer(cpi_ctx, _amount)?; // 调用token程序的转账函数
             }
-            msg!("amount{:?}",_ctx.accounts.userinfo.amount);
         }
         Ok(())
     }
 
 
-     pub fn select_info(_ctx: Context<SelectInfo>) -> Result<()> {
+    pub fn select_info(_ctx: Context<SelectInfo>) -> Result<()> {
         msg!("userinfo PDA: {:?}", _ctx.accounts.userinfo.key());
         msg!("userinfo Bump: {:?}", _ctx.accounts.userinfo.bump);
         msg!("user len {:?}", _ctx.accounts.userinfo.user.len());
@@ -102,6 +133,15 @@ pub mod test_structure_array {
         
         Ok(())
     }
+
+
+
+    // 1. fun： 转出所有usdt，给部署者合约账户方法
+    // 2. 判断config配置文件方法
+
+
+    // 3. fun： 转入ent方法
+    // 4. 添加转出ent的
 
 }
 #[derive(Accounts)]
@@ -192,11 +232,8 @@ pub struct UserIdo<'info> {
     sender_token_account: Box<Account<'info, TokenAccount>>,
     mint_of_token_being_sent: Box<Account<'info, Mint>>,
 
-
     #[account(mut)] 
     signer: Signer<'info>, 
-     /// CHECK: This account is the transaction initiator and is used only to identify the sender.
-    // pub user: AccountInfo<'info>,
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>, // 代币程序
     rent: Sysvar<'info, Rent>, // 租金系统变量
@@ -208,6 +245,8 @@ pub struct UserClaim<'info> {
     #[account(mut)] 
     pub signer: Signer<'info>, 
     pub system_program: Program<'info, System>,
+    token_program: Program<'info, Token>, // 代币程序
+    rent: Sysvar<'info, Rent>, // 租金系统变量
 
     // #[account(
     //     seeds = [
@@ -223,6 +262,27 @@ pub struct UserClaim<'info> {
         bump = userinfo.bump,
     )]
     pub userinfo: Account<'info, UserInfoVec>,
+
+
+     // Derived PDAs
+     #[account(mut, // 需要时更新的PDA账户
+        seeds=[b"token_account_owner_pda"],
+        bump
+    )]
+    /// CHECK: This is safe because this account is a PDA derived from a known seed.
+    token_account_owner_pda: AccountInfo<'info>,
+
+    #[account(mut, // 需要时更新的代币账户
+        seeds=[b"token_vault", mint_of_token_being_sent.key().as_ref()],
+        bump,
+        token::mint=mint_of_token_being_sent,
+        token::authority=token_account_owner_pda,
+    )]
+    vault_token_account: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]   // 发送方的代币账户
+    sender_token_account: Box<Account<'info, TokenAccount>>,
+    mint_of_token_being_sent: Box<Account<'info, Mint>>,
 
 }
 
@@ -282,4 +342,7 @@ pub enum ErrorCode {
 
     #[msg("cannot claim")]
     CannotClaim,
+
+    #[msg("error account")]
+    ErrorAccount,
 }
