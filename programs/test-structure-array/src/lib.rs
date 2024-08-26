@@ -325,6 +325,15 @@ pub struct UserInfoVec {
     pub bump: u8, // 0-255
 }
 
+#[account] 
+#[derive(InitSpace)]
+pub struct ConfigInfo {
+    pub admin: Pubkey,  // 管理员的公钥
+    pub is_claim: bool,  // 是否能领空投
+    pub is_ido: bool,  // 是否能ido
+    pub bump: u8, // 0-255
+}
+
 // 修改为添加成数组
 // 在新项目中测试添加vec
 
