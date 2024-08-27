@@ -71,6 +71,7 @@ describe("test-structure-array", () => {
   //     mint时生成: 6hZQPWnELWm9AEwVyVpTNLMyiUHeaazS2ciFKzTofXxv
   // (无seed)7iHFygeCrUgitpohCRy1xynsJLqQndhuMfj5XoMnXkiz
 
+  // test value:FKdVqegqBY527oBF5KY7M15zuUtQP8Trxu5HfnESDtXf
 
 
 
@@ -145,7 +146,6 @@ describe("test-structure-array", () => {
     const tx2 = await program.methods.initialize().accounts(initAccounts2).signers([mintAuthority]).rpc();
   });
 
-  // wtCc4KmQoG5nk7gfw7i5nSGurFHGZSF4qVGmGprYGo3JXGp7sKZajqaNSFp2LjpnfJUXnkmZQjohfTVTgBzdZFg
   it.skip("InitConfig!", async () => {
     console.log("userInfoPDA:", userInfoPDA)
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
@@ -163,7 +163,7 @@ describe("test-structure-array", () => {
   });
 
 
-  it.skip("update config", async () => {
+  it("update config", async () => {
     console.log("update config")
     let configaccount = myAccount
     // const tx = await program.methods.updateConfig(true, true).accounts({ // 设置是否可以 is_ido 和 is_claim
@@ -186,6 +186,7 @@ describe("test-structure-array", () => {
 
   });
 
+  // 
   it.skip("create mint accout", async () => {
 
     // 检查网络连接版本
@@ -201,27 +202,11 @@ describe("test-structure-array", () => {
     //   console.error("Failed to get balance:", error);
     // });
 
-    // await dnsPromises.setDefaultResultOrder('ipv4first')
-
-    // const createdSFT = await metaplex.nfts().createSft({
-    //   // uri: "http://localhost:8080/assessment/USDTCoinMeta",
-    //   uri: "https://chatgpt.jingyanclub.tech/USDTCoinMeta",
-    //   // uri: "https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/PirateCoinMeta",
-    //   name: "USDT",
-    //   symbol: "USDT",
-    //   sellerFeeBasisPoints: 100,
-    //   updateAuthority: mintAuthority,
-    //   mintAuthority: mintAuthority,
-    //   decimals: decimals,
-    //   tokenStandard: TokenStandard.Fungible, // 表示你正在创建或操作的是同质化代币。
-    //   isMutable: true,
-    // });
-
     const createdSFT = await metaplex.nfts().createSft({
       uri: "https://chatgpt.jingyanclub.tech/ENTCoinMeta",
       // uri: "https://shdw-drive.genesysgo.net/AzjHvXgqUJortnr5fXDG2aPkp2PfFMvu4Egr57fdiite/PirateCoinMeta",
-      name: "ENT",
-      symbol: "ENT",
+      name: "test0815",
+      symbol: "test0815",
       sellerFeeBasisPoints: 100,
       updateAuthority: mintAuthority,
       mintAuthority: mintAuthority,
@@ -233,8 +218,9 @@ describe("test-structure-array", () => {
 
   // mint 代币
   it.skip("mint token", async () => {
+    let mintaccount = mint_ent_ID
     let mintResult = await metaplex.nfts().mint({
-      nftOrSft: { address: mint_ent_ID, tokenStandard: TokenStandard.Fungible },
+      nftOrSft: { address: mintaccount, tokenStandard: TokenStandard.Fungible },
       authority: mintAuthority,
       toOwner: myAccount.publicKey,
       amount: token(99999 * mintDecimals),
@@ -242,7 +228,7 @@ describe("test-structure-array", () => {
     console.log("Mint to result: " + mintResult.response.signature);
   });
 
-  // 转账给合约
+  // 转账给合约-1
   it("user_ido", async () => {
 
     // // 生成pda账户-----------------------
@@ -288,8 +274,8 @@ describe("test-structure-array", () => {
 
   // 参与者权限问题,无法访问 UserInfoVec 集合
 
-  // 参与者2
-  it("user_ido2", async () => {
+  // 参与者2-2
+  it.skip("user_ido2", async () => {
     let userido = myAccount2;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -332,7 +318,7 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   })
 
-  it("user_claim", async () => {
+  it.skip("user_claim", async () => {
     let claimaccount = myAccount;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -376,7 +362,7 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   });
 
-  it("user_claim2", async () => {
+  it.skip("user_claim2", async () => {
     let claimaccount = myAccount2;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -454,14 +440,14 @@ describe("test-structure-array", () => {
     let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
     console.log("config:", cfg)
     // Add your test here.
-    const tx = await program.methods.transferUsdt(new anchor.BN(2 * mintDecimals)).accounts(initAccounts).signers([claimaccount]).rpc();
+    const tx = await program.methods.transferUsdt(new anchor.BN(1 * mintDecimals)).accounts(initAccounts).signers([claimaccount]).rpc();
     console.log("Your transaction signature", tx);
     console.log("config:", cfg)
   });
 
-  // 管理员转入ent
+  // 管理员转出ent
   it.skip("admin transfer_ent", async () => {
-    let claimaccount = myAccount2;
+    let claimaccount = myAccount;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_account_owner_pda")], // seeds 为
@@ -482,12 +468,8 @@ describe("test-structure-array", () => {
       mint_ent_ID,
       claimaccount.publicKey  //获取哪个账户的tokenAccout
     );
-
     console.log("tokenAccount: " + tokenAccount);
-
     let initAccounts = {
-      userinfo: userInfoPDA,
-      // user: myAccount.publicKey,
       tokenAccountOwnerPda: tokenAccountOwnerPda, // pda：程序关联的token account账户
       vaultTokenAccount: tokenVault, //接收代币的地址
       senderTokenAccount: tokenAccount.address, // 发送token的账户
@@ -495,12 +477,10 @@ describe("test-structure-array", () => {
       signer: claimaccount.publicKey,
     }
     let cfg = await program.account.userInfoVec.fetch(userInfoPDA); // 获取config 的 pda信息
-
     console.log("config:", cfg)
     // Add your test here.
-    const tx = await program.methods.userClaim().accounts(initAccounts).signers([claimaccount]).rpc();
+    const tx = await program.methods.transferEnt(new anchor.BN(889 * mintDecimals)).accounts(initAccounts).signers([claimaccount]).rpc();
     console.log("Your transaction signature", tx);
-
     console.log("config:", cfg)
   });
 
@@ -519,6 +499,7 @@ describe("test-structure-array", () => {
     console.log("Your transaction signature", tx);
   });
 
+  // 92,998
 
   it("ALLconfig", async () => {
     console.log("userInfoPDA:", userInfoPDA)
