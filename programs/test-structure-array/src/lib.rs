@@ -21,7 +21,6 @@ pub mod test_structure_array {
     }
 
     pub fn init_config(_ctx: Context<InitConfig>) -> Result<()> {
-
         msg!("Greetings from: {:?}", _ctx.program_id);
         _ctx.accounts.userinfo.bump = _ctx.bumps.userinfo;
         _ctx.accounts.config.bump = _ctx.bumps.config;
@@ -30,13 +29,10 @@ pub mod test_structure_array {
 
         // _ctx.accounts.userinfo.user = vec![Pubkey::from_str("").unwrap(); 10];
         // _ctx.accounts.userinfo.amount = vec![0; 10];
-
         Ok(())
     }
 
-
-
-    pub fn user_ido(_ctx: Context<UserIdo>,  _amount: u64) -> Result<()> {
+    pub fn user_ido(_ctx: Context<UserIdo>, _amount: u64) -> Result<()> {
        
         require!(_ctx.accounts.config.is_ido == true, ErrorCode::CannotIdo); 
 
@@ -53,19 +49,19 @@ pub mod test_structure_array {
         );
 
         anchor_spl::token::transfer(cpi_ctx, _amount)?; // 调用token程序的转账函数 // 无返回值
-
+        // _amount =  _amount * 2000; // 1u  = 1 / 0.0005 ent = 2000ent
         if let Some(pos) = _ctx.accounts.userinfo.user.iter().position(|&x| x == _ctx.accounts.signer.key()) { 
             println!("Found 30 at index: {}", pos); // 输出: Found 30 at index: 2
             msg!("_ctx.accounts.signer 的位置{}",pos);
 
             if let Some(value) =  _ctx.accounts.userinfo.amount.get_mut(pos){
-                *value +=  _amount;
+                *value +=  _amount * 2000;
             }
             msg!("add{:?}",_ctx.accounts.userinfo.amount);
         }else{
             _ctx.accounts.userinfo.user.push( _ctx.accounts.signer.key());
-            _ctx.accounts.userinfo.amount.push(_amount);
-            msg!("amount {:?}",_amount)
+            _ctx.accounts.userinfo.amount.push(_amount* 2000);
+            msg!("amount {:?}",_amount* 2000)
         }
 
         msg!("userinfo PDA: {:?}", _ctx.accounts.userinfo.key());
@@ -201,7 +197,6 @@ pub mod test_structure_array {
         Ok(())
     }
 
-
     pub fn select_info(_ctx: Context<SelectInfo>) -> Result<()> {
         msg!("config PDA: {:?}", _ctx.accounts.config.key());
         msg!("config Bump: {:?}", _ctx.accounts.config.bump);
@@ -216,12 +211,8 @@ pub mod test_structure_array {
         msg!("amount{:?}",_ctx.accounts.userinfo.amount);
         Ok(())
     }
-    // 1. fun： 转出所有usdt，给部署者合约账户方法
-    // 4. 添加转出ent的
 
-    // 2. 判断config配置文件方法——————待测试
-    // 3. phantom 转入 token 方法，可以直接给ata账户和solana账户转账，转账前合约地址必须存在
-    
+
 
 }
 #[derive(Accounts)]
