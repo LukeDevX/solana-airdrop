@@ -393,9 +393,9 @@ pub struct TransferAccounts<'info> {
 #[account] 
 #[derive(InitSpace)]
 pub struct UserInfoVec {
-    #[max_len(10000)] 
+    #[max_len(200)] 
     pub user: Vec<Pubkey>,  
-    #[max_len(10000)] 
+    #[max_len(200)] 
     pub amount: Vec<u64>,   
     pub bump: u8,
 }

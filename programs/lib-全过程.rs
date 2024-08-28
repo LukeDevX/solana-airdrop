@@ -466,9 +466,9 @@ pub struct UserInfoVec {
     //  10 MiB，你需要根据你存储的类型（如 Pubkey 或 u64）来计算可以存储的最大元素数量，
     // Vec<Pubkey> =   ≈163,840 个元素
     // Vec<u64> = 655,360 个元素
-    #[max_len(10000)] // 指定Vec的最大长度为100
+    #[max_len(200)] // 指定Vec的最大长度为200 超过200报错
     pub user: Vec<Pubkey>,  // 存储键
-    #[max_len(10000)] 
+    #[max_len(200)] 
     pub amount: Vec<u64>,   // 存储值
     // pub user: Vec<Pubkey>,  // 存储键
     // pub amount: Vec<u64>,   // 存储值

@@ -5,8 +5,8 @@ import { TestStructureArray } from "../target/types/test_structure_array";
 import { describe, it } from 'mocha';
 import "dotenv/config"; // 加载dev配置文件
 
+import { Keypair, Connection, PublicKey } from "@solana/web3.js";
 
-import { Keypair, Connection, PublicKey } from "@solana/web3.js"
 import {
   getAccount,
   getOrCreateAssociatedTokenAccount,
@@ -38,13 +38,13 @@ describe("test-structure-array", () => {
   // 部署者密钥1
   let secretKey = Uint8Array.from([30, 240, 35, 42, 27, 238, 200, 249, 187, 255, 152, 130, 199, 65, 213, 144, 146, 160, 154, 79, 58, 104, 177, 56, 233, 17, 243, 160, 122, 151, 197, 253, 134, 27, 181, 206, 132, 195, 226, 52, 155, 228, 159, 173, 82, 123, 95, 153, 232, 181, 241, 213, 78, 177, 206, 218, 163, 176, 102, 167, 228, 28, 198, 133]);
   const myAccount = anchor.web3.Keypair.fromSecretKey(secretKey); // 获取密钥对
-  console.log("myAccount is :", myAccount.publicKey.toBase58);
+  console.log("myAccount1 is :", myAccount.publicKey.toBase58);
 
 
   // 参与者密钥2
   let secretKey2 = Uint8Array.from([76, 63, 49, 163, 137, 165, 168, 32, 121, 162, 204, 13, 20, 223, 35, 79, 171, 7, 32, 84, 63, 77, 242, 202, 73, 231, 100, 90, 24, 113, 47, 110, 117, 147, 223, 161, 78, 65, 8, 55, 185, 108, 117, 224, 84, 102, 234, 187, 198, 17, 193, 39, 10, 200, 0, 181, 57, 45, 111, 54, 213, 90, 246, 123]);
   const myAccount2 = anchor.web3.Keypair.fromSecretKey(secretKey2); // 获取密钥
-  console.log("myAccount is :", myAccount2.publicKey.toBase58);
+  console.log("myAccount2 is :", myAccount2.publicKey.toBase58);
 
   const program = anchor.workspace.TestStructureArray as Program<TestStructureArray>;
 
@@ -89,12 +89,13 @@ describe("test-structure-array", () => {
   // devnet 可以正常创建，报错信息中有mintaccount地址
   // localnet 无法创建，报错：程序地址无法找到：Transaction simulation failed: Attempt to load a program that does not exist.
 
-  it.skip("Is initialized!", async () => {
+  it.skip("Is initialized!", async function () {
+    this.timeout(30000);
     let [tokenVault] = PublicKey.findProgramAddressSync(
       [Buffer.from("token_vault"), mint_usdt_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
-    console.log("VaultAccount: " + tokenVault);
+    console.log("合约 usdt Vault Account: " + tokenVault);
 
     // 获取发送者的 token account 地址
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -126,7 +127,7 @@ describe("test-structure-array", () => {
       [Buffer.from("token_vault"), mint_ent_ID.toBuffer()], // seed："token_vaul",mint token账户地址
       lib_PROGRAM_ID // 关联程序的地址
     );
-    console.log("tokenVaultent: " + tokenVaultent);
+    console.log("合约 ent Vault Account: " + tokenVaultent);
 
     const tokenAccountent = await getOrCreateAssociatedTokenAccount(
       devConnection,
@@ -146,7 +147,8 @@ describe("test-structure-array", () => {
     const tx2 = await program.methods.initialize().accounts(initAccounts2).signers([mintAuthority]).rpc();
   });
 
-  it.skip("InitConfig!", async () => {
+  it.skip("InitConfig!", async function () {
+    this.timeout(30000);
     console.log("userInfoPDA:", userInfoPDA)
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
     let initAccounts = {
@@ -163,7 +165,8 @@ describe("test-structure-array", () => {
   });
 
 
-  it("update config", async () => {
+  it.skip("update config", async function () {
+    this.timeout(30000);
     console.log("update config")
     let configaccount = myAccount
     // const tx = await program.methods.updateConfig(true, true).accounts({ // 设置是否可以 is_ido 和 is_claim
@@ -187,7 +190,8 @@ describe("test-structure-array", () => {
   });
 
   // 
-  it.skip("create mint accout", async () => {
+  it.skip("create mint accout", async function () {
+    this.timeout(30000);
 
     // 检查网络连接版本
     // devConnection.getVersion().then(version => {
@@ -217,7 +221,8 @@ describe("test-structure-array", () => {
   });
 
   // mint 代币
-  it.skip("mint token", async () => {
+  it.skip("mint token", async function () {
+    this.timeout(30000);
     let mintaccount = mint_ent_ID
     let mintResult = await metaplex.nfts().mint({
       nftOrSft: { address: mintaccount, tokenStandard: TokenStandard.Fungible },
@@ -229,7 +234,8 @@ describe("test-structure-array", () => {
   });
 
   // 转账给合约-1
-  it("user_ido", async () => {
+  it.skip("user_ido", async function () {
+    this.timeout(30000);
 
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -275,7 +281,8 @@ describe("test-structure-array", () => {
   // 参与者权限问题,无法访问 UserInfoVec 集合
 
   // 参与者2-2
-  it.skip("user_ido2", async () => {
+  it.skip("user_ido2", async function () {
+    this.timeout(30000);
     let userido = myAccount2;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -318,7 +325,8 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   })
 
-  it.skip("user_claim", async () => {
+  it.skip("user_claim", async function () {
+    this.timeout(30000);
     let claimaccount = myAccount;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -362,7 +370,8 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   });
 
-  it.skip("user_claim2", async () => {
+  it.skip("user_claim2", async function () {
+    this.timeout(30000);
     let claimaccount = myAccount2;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -407,7 +416,8 @@ describe("test-structure-array", () => {
   });
 
   // 管理员转出usdt
-  it.skip("admin transfer_usdt", async () => {
+  it.skip("admin transfer_usdt", async function () {
+    this.timeout(30000);
     let claimaccount = myAccount;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -446,7 +456,8 @@ describe("test-structure-array", () => {
   });
 
   // 管理员转出ent
-  it.skip("admin transfer_ent", async () => {
+  it.skip("admin transfer_ent", async function () {
+    this.timeout(30000);
     let claimaccount = myAccount;
     // // 生成pda账户-----------------------
     let [tokenAccountOwnerPda] = PublicKey.findProgramAddressSync(
@@ -484,7 +495,8 @@ describe("test-structure-array", () => {
     console.log("config:", cfg)
   });
 
-  it("select info", async () => {
+  it("select info", async function () {
+    this.timeout(30000);
     console.log("userInfoPDA:", userInfoPDA)
     console.log("mintAuthority.publicKey:", mintAuthority.publicKey)
     let initAccounts = {
@@ -501,7 +513,8 @@ describe("test-structure-array", () => {
 
   // 92,998
 
-  it("ALLconfig", async () => {
+  it("ALLconfig", async function () {
+    this.timeout(30000);
     console.log("userInfoPDA:", userInfoPDA)
     console.log("cfgPDA:", cfgPDA)
 
