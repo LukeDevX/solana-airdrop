@@ -39,3 +39,42 @@ solana，转账，添加白名单，发放空投
 1. phantom 转入 token 方法，可以直接给ata账户和solana账户转账，转账前合约地址必须存在  
 2. 有mint账户后,给转账owner转账,无mint账户, 账户默认会转给 seed生成账户  
 
+
+
+
+
+# solana-ido
+
+加载环境  
+yarn install  
+运行test测试文件  
+yarn test  
+
+
+# 相关密钥和地址
+
+ido 部署者私钥：csocdQ15irZVCExB7SUzpmSVfPYZygzouwCTpd2f1Au3gURmQJp34NSWEGhshQ8rPSe6zgZMR2g9h5fJHS4qiui
+十进制密钥：
+[30,240,35,42,27,238,200,249,187,255,152,130,199,65,213,144,146,160,154,79,58,104,177,56,233,17,243,160,122,151,197,253,134,27,181,206,132,195,226,52,155,228,159,173,82,123,95,153,232,181,241,213,78,177,206,218,163,176,102,167,228,28,198,133]
+
+部署者公钥：A2W9314MCgkYBJzCoS3aPsgFeMayeQC8naELBQU6W9JL  
+
+ido合约地址：9Rbdop6mpjsKFBdvZuuixs32xdGQujmA1kuAyxLN9vxn  
+合约pad管理地址:Gh6gxSWuqtpbT99svmzUA8U8PRruGEjE2Vmp2cKMFqAk  
+合约 usdt Vault 地址: 2wgjBz6EnjnVRJ1xeEueBBS3cQAowCCcS23rSAGoKys4  
+合约 ent Vault 地址: B8AErr1pLeaUDqABSuzTvGNmNycry3KtqHru8QkbnPoN  
+
+mint usdt 地址 = 4GMWAa3hMjbPe2C1hwuB3huFGjVFYDrpo5wu6mEQFSKG  
+mint ent 地址 = 5Y6MQYxbyDMr1jbUPLCst3iVhS8bWwgSTo6tjoct2ypK
+
+用户信息存储地址：BvT2XzdqwJpMmhPhUb12v7dgj6LQkKAuy55x61tbSkDg  
+合约配置信息存储地址：HoewnpUMXCzArk87boHdKeXXQkaznkgYfkmwnt9hdejY  
+
+
+# 注意
+- 1u = 1 / 0.0005 ent = 2000ent  
+- 默认只能存 200个用户 （2sol）
+
+# 常见错误
+
+
